@@ -1,0 +1,11 @@
+framework module MZPlayer {
+  umbrella header "MZPlayer-umbrella.h"
+
+  export *
+  module * { export * }
+}
+
+module MZPlayer.Swift {
+    header "MZPlayer-Swift.h"
+    requires objc
+}

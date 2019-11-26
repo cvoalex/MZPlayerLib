@@ -8,7 +8,7 @@
 
 Pod::Spec.new do |s|
   s.name             = 'MZPlayer'
-  s.version          = '0.1.5'
+  s.version          = '0.1.6'
   s.summary          = 'A short description of MZPlayer.'
 
 # This description is used to generate tags and improve search results.
@@ -43,4 +43,5 @@ TODO: Add long description of the pod here.
   # s.dependency 'AFNetworking', '~> 2.3'
   s.libraries = 'z'
   s.frameworks = 'CoreMedia', 'CoreVideo', 'AudioToolbox', 'VideoToolbox', 'AVFoundation'
+  s.dependency 'MZStreamCore'
 end

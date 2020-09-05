@@ -8,7 +8,7 @@
 
 Pod::Spec.new do |s|
   s.name             = 'MZPlayer'
-  s.version          = '0.1.13'
+  s.version          = '0.1.14'
   s.summary          = 'A short description of MZPlayer.'
 
 # This description is used to generate tags and improve search results.
@@ -29,7 +29,7 @@ TODO: Add long description of the pod here.
   # s.social_media_url = 'https://twitter.com/<TWITTER_USERNAME>'
 
   s.swift_version = '4.2'
-  s.ios.deployment_target = '11.3'
+  s.ios.deployment_target = '12.2'
   s.ios.vendored_frameworks = 'MZPlayer.framework'
 
   s.source_files = 'MZPlayer/Classes/**/*'
@@ -44,4 +44,10 @@ TODO: Add long description of the pod here.
   s.libraries = 'z'
   s.frameworks = 'CoreMedia', 'CoreVideo', 'AudioToolbox', 'VideoToolbox', 'AVFoundation'
   s.dependency 'MZStreamCore'
+  s.dependency 'MZCameraCore'
+
+  s.xcconfig = {
+    # GoogleWebRTC (MZCameraCore) wasn't compiled with bitcode
+    'ENABLE_BITCODE' => 'NO',
+  }
 end

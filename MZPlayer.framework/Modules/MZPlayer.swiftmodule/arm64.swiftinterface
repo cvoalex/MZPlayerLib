@@ -1,0 +1,455 @@
+// swift-interface-format-version: 1.0
+// swift-compiler-version: Apple Swift version 5.3 effective-4.2 (swiftlang-1200.0.29.2 clang-1200.0.30.1)
+// swift-module-flags: -target arm64-apple-ios14.0 -enable-objc-interop -enable-library-evolution -swift-version 4.2 -enforce-exclusivity=checked -Onone -module-name MZPlayer
+import AVFoundation
+import Foundation
+import MZCameraCore
+@_exported import MZPlayer
+import MZStreamCore
+import MediaPlayer
+import Swift
+import UIKit
+import VideoToolbox
+import os.log
+import os
+public class Asset {
+  public var urlAsset: AVFoundation.AVURLAsset
+  final public let stream: MZPlayer.Stream
+  public init(stream: MZPlayer.Stream, urlAsset: AVFoundation.AVURLAsset)
+  @objc deinit
+}
+extension Asset : Swift.Equatable {
+  public static func == (lhs: MZPlayer.Asset, rhs: MZPlayer.Asset) -> Swift.Bool
+}
+public func setup(llbEndpoint: Swift.String, s3Endpoint: Swift.String, stage: Swift.String)
+@_hasMissingDesignatedInitializers public class HLSAssetLoadManager {
+  public static var shared: MZPlayer.HLSAssetLoadManager
+  public func getHLSAsset(type: MZPlayer.HLSAssetLoadManager.AssetType, name: Swift.String, userId: Swift.String) -> MZPlayer.Asset?
+  @objc deinit
+}
+extension HLSAssetLoadManager {
+  public enum AssetType {
+    case vod
+    case captured(local: Foundation.URL)
+    case live
+  }
+}
+public protocol HLSAssetPlaybackDelegate : AnyObject {
+  func streamPlaybackManager(_ streamPlaybackManager: MZPlayer.HLSAssetPlaybackManager, playerReadyToPlay player: AVFoundation.AVPlayer)
+  func streamPlaybackManager(_ streamPlaybackManager: MZPlayer.HLSAssetPlaybackManager, playerCurrentItemDidChange player: AVFoundation.AVPlayer)
+  func streamPlaybackManager(_ streamPlaybackManager: MZPlayer.HLSAssetPlaybackManager, playerPlaybackStalled player: AVFoundation.AVPlayer)
+  func streamPlaybackManager(_ streamPlaybackManager: MZPlayer.HLSAssetPlaybackManager, playerFailed error: Swift.Error)
+}
+@objc @_inheritsConvenienceInitializers public class HLSAssetPlaybackManager : ObjectiveC.NSObject {
+  weak public var delegate: MZPlayer.HLSAssetPlaybackDelegate?
+  public var playbackLoops: Swift.Bool {
+    get
+    set(newValue)
+  }
+  public var playerLayer: AVFoundation.AVPlayerLayer {
+    get
+  }
+  @objc override dynamic public init()
+  @objc deinit
+  public func setAssetForPlayback(_ asset: MZPlayer.Asset?)
+}
+extension HLSAssetPlaybackManager {
+  public func play()
+  public func pause()
+  public func getCurrentAsset() -> MZPlayer.Asset?
+}
+public protocol HLSAssetPreheatManagerDelegate : AnyObject {
+  func loadStream(withName name: Swift.String) -> MZPlayer.Stream?
+  func renewStreamBookmark(withName name: Swift.String, bookmark: Foundation.Data)
+  func finishStreamPreheat(withStream stream: MZPlayer.Stream, bookmark: Foundation.Data)
+  func deleteStream(withName name: Swift.String)
+  func preheatThreshold() -> Swift.Double?
+}
+@objc @_inheritsConvenienceInitializers @_hasMissingDesignatedInitializers public class HLSAssetPreheatManager : ObjectiveC.NSObject {
+  public static var shared: MZPlayer.HLSAssetPreheatManager
+  weak public var delegate: MZPlayer.HLSAssetPreheatManagerDelegate?
+  public func preheatStream(withName name: Swift.String, userId: Swift.String)
+  public func getStream(withName name: Swift.String, userId: Swift.String, local: Foundation.URL? = nil) -> MZPlayer.Asset?
+  @objc deinit
+}
+extension HLSAssetPreheatManager : AVFoundation.AVAssetDownloadDelegate {
+  @objc dynamic public func urlSession(_ session: Foundation.URLSession, task: Foundation.URLSessionTask, didCompleteWithError error: Swift.Error?)
+  @objc dynamic public func urlSession(_ session: Foundation.URLSession, aggregateAssetDownloadTask: AVFoundation.AVAggregateAssetDownloadTask, willDownloadTo location: Foundation.URL)
+  @objc dynamic public func urlSession(_ session: Foundation.URLSession, aggregateAssetDownloadTask: AVFoundation.AVAggregateAssetDownloadTask, didCompleteFor mediaSelection: AVFoundation.AVMediaSelection)
+  @objc dynamic public func urlSession(_ session: Foundation.URLSession, aggregateAssetDownloadTask: AVFoundation.AVAggregateAssetDownloadTask, didLoad timeRange: CoreMedia.CMTimeRange, totalTimeRangesLoaded loadedTimeRanges: [Foundation.NSValue], timeRangeExpectedToLoad: CoreMedia.CMTimeRange, for mediaSelection: AVFoundation.AVMediaSelection)
+}
+@objc public enum LHLSPlayerState : Swift.Int32, Swift.CustomStringConvertible {
+  case stopped
+  case playing
+  case buffering
+  case paused
+  public var description: Swift.String {
+    get
+  }
+  public typealias RawValue = Swift.Int32
+  public init?(rawValue: Swift.Int32)
+  public var rawValue: Swift.Int32 {
+    get
+  }
+}
+@objc public protocol LHLSPlayerDelegate {
+  @objc optional func stateChanged(_ sender: MZPlayer.LHLSPlayer, newState: MZPlayer.LHLSPlayerState)
+  @objc optional func targetBuffLengthChanged(_ sender: MZPlayer.LHLSPlayer, newBufferLEngth: Swift.Double)
+}
+@objc @_inheritsConvenienceInitializers open class LHLSPlayer : ObjectiveC.NSObject {
+  weak public var previewLayer: AVFoundation.AVSampleBufferDisplayLayer? {
+    get
+    set(value)
+  }
+  open var audioPlaylistAddress: Swift.String
+  open var videoPlaylistAddress: Swift.String
+  open var rootPlaylistAddress: Swift.String
+  open var targetBufferLength: Swift.Double {
+    get
+    set(value)
+  }
+  open var maxBufferLength: Swift.Double
+  open var autoAdjustBufferLength: Swift.Bool
+  open var state: MZPlayer.LHLSPlayerState {
+    get
+  }
+  weak open var delegate: MZPlayer.LHLSPlayerDelegate?
+  open var videoBufferLength: Swift.Double {
+    get
+  }
+  @objc deinit
+  open func prepareForPlayback()
+  open func play()
+  open func stop()
+  open func pause()
+  open func processPlayback()
+  @objc override dynamic public init()
+}
+extension LHLSPlayer : MZStreamCore.HLSv7DemuxerDelegate {
+  @objc dynamic open func videoFrameReceived(_ frame: CoreMedia.CMSampleBuffer)
+  @objc dynamic open func onAudioSampleReceived(_ audioSample: Foundation.Data, timestamp: CoreMedia.CMTime)
+}
+extension LHLSPlayer : MZStreamCore.FDKAACDecoderDelegate {
+  @objc dynamic open func decompressedAudioDataReceived(_ data: Foundation.Data, pts: CoreMedia.CMTime)
+}
+public protocol LocalAssetProxyManagerDelegate : AnyObject {
+  func loadLocalFile(withStream stream: Swift.String, file: Swift.String) -> Foundation.Data?
+}
+@objc @_inheritsConvenienceInitializers @_hasMissingDesignatedInitializers public class LocalAssetProxyManager : ObjectiveC.NSObject {
+  public static var shared: MZPlayer.LocalAssetProxyManager
+  weak public var delegate: MZPlayer.LocalAssetProxyManagerDelegate?
+  public func createLocalStreamAsset(forName name: Swift.String) -> MZPlayer.Asset?
+  public func replaceRelativePathToProxyPath(playlist: Foundation.Data, path: Swift.String) -> Foundation.Data?
+  @objc deinit
+}
+extension LocalAssetProxyManager : AVFoundation.AVAssetResourceLoaderDelegate {
+  @objc dynamic public func resourceLoader(_ resourceLoader: AVFoundation.AVAssetResourceLoader, shouldWaitForLoadingOfRequestedResource loadingRequest: AVFoundation.AVAssetResourceLoadingRequest) -> Swift.Bool
+  @objc dynamic public func resourceLoader(_ resourceLoader: AVFoundation.AVAssetResourceLoader, didCancel loadingRequest: AVFoundation.AVAssetResourceLoadingRequest)
+}
+public struct MZMediaMetadata : MZPlayer.PlayerMediaMetadata, Swift.Equatable {
+  public let title: Swift.String?
+  public let albumTitle: Swift.String?
+  public let artist: Swift.String?
+  public let image: Foundation.Data?
+  public let remoteImageUrl: Foundation.URL?
+  public init(title: Swift.String? = nil, albumTitle: Swift.String? = nil, artist: Swift.String? = nil, image: Foundation.Data? = nil, remoteImageUrl: Foundation.URL? = nil)
+  public static func == (a: MZPlayer.MZMediaMetadata, b: MZPlayer.MZMediaMetadata) -> Swift.Bool
+}
+public enum PlayerError : Swift.Error {
+  case loadingFailed
+  case playbackStalled
+  case bufferingFailed
+  public static func == (a: MZPlayer.PlayerError, b: MZPlayer.PlayerError) -> Swift.Bool
+  public var hashValue: Swift.Int {
+    get
+  }
+  public func hash(into hasher: inout Swift.Hasher)
+}
+@objc final public class MZMediaPlayer : ObjectiveC.NSObject, MZPlayer.PlayerControllable {
+  weak final public var delegate: MZPlayer.MZMediaPlayerDelegate?
+  final public var player: AVFoundation.AVPlayer {
+    get
+  }
+  final public var state: MZPlayer.MZMediaPlayer.State {
+    get
+  }
+  final public var currentMedia: MZPlayer.PlayerMedia? {
+    get
+  }
+  final public var currentTime: Swift.Double {
+    get
+  }
+  final public var itemDuration: Swift.Double? {
+    get
+  }
+  final public var currentItem: AVFoundation.AVPlayerItem? {
+    get
+  }
+  final public var loopMode: Swift.Bool {
+    get
+    set(newValue)
+  }
+  final public var isPlaybackGlobalSync: Swift.Bool {
+    get
+    set(newValue)
+  }
+  public init(player: AVFoundation.AVPlayer = AVPlayer(), config: MZPlayer.PlayerConfiguration = MZPlayerConfiguration(), loggerDomains: [MZPlayer.MZPlayerLoggerDomain] = [])
+  final public func pause()
+  final public func seek(position: MZPlayer.PlaybackPosition)
+  final public func seek(offset: Swift.Double)
+  final public func stop()
+  final public func load(media: MZPlayer.PlayerMedia, autostart: Swift.Bool, position: MZPlayer.PlaybackPosition? = nil)
+  final public func updateMetadata(_ metadata: MZPlayer.PlayerMediaMetadata)
+  final public func updateSignaling(roomId: Swift.String, userId: Swift.String)
+  final public func play()
+  @objc deinit
+  @objc override dynamic public init()
+}
+extension MZMediaPlayer {
+  public enum State : Swift.String, Swift.CustomStringConvertible {
+    case buffering
+    case failed
+    case initialization
+    case loaded
+    case loading
+    case paused
+    case playing
+    case stopped
+    case waitingForNetwork
+    public var description: Swift.String {
+      get
+    }
+    public typealias RawValue = Swift.String
+    public init?(rawValue: Swift.String)
+    public var rawValue: Swift.String {
+      get
+    }
+  }
+}
+public enum PlayerUnavailableActionReason {
+  case alreadyPaused
+  case alreadyPlaying
+  case alreadyStopped
+  case alreadyTryingToPlay
+  case seekPositionNotAvailable
+  case loadMediaFirst
+  case seekOverstepPosition
+  case waitEstablishedNetwork
+  case waitLoadedMedia
+  public static func == (a: MZPlayer.PlayerUnavailableActionReason, b: MZPlayer.PlayerUnavailableActionReason) -> Swift.Bool
+  public var hashValue: Swift.Int {
+    get
+  }
+  public func hash(into hasher: inout Swift.Hasher)
+}
+public protocol MZMediaPlayerDelegate : AnyObject {
+  func mediaPlayer(_ player: MZPlayer.MZMediaPlayer, didStateChange state: MZPlayer.MZMediaPlayer.State)
+  func mediaPlayer(_ player: MZPlayer.MZMediaPlayer, didCurrentMediaChange media: MZPlayer.PlayerMedia?)
+  func mediaPlayer(_ player: MZPlayer.MZMediaPlayer, didCurrentTimeChange currentTime: Swift.Double)
+  func mediaPlayer(_ player: MZPlayer.MZMediaPlayer, didItemDurationChange itemDuration: Swift.Double?)
+  func mediaPlayer(_ player: MZPlayer.MZMediaPlayer, unavailableActionReason: MZPlayer.PlayerUnavailableActionReason)
+  func mediaPlayer(_ player: MZPlayer.MZMediaPlayer, didItemPlayToEndTime endTime: Swift.Double)
+  func mediaPlayer(_ player: MZPlayer.MZMediaPlayer, didCurrentCaptured frame: UIKit.UIImage)
+}
+extension MZMediaPlayerDelegate {
+  public func mediaPlayer(_ player: MZPlayer.MZMediaPlayer, didStateChange state: MZPlayer.MZMediaPlayer.State)
+  public func mediaPlayer(_ player: MZPlayer.MZMediaPlayer, didCurrentMediaChange media: MZPlayer.PlayerMedia?)
+  public func mediaPlayer(_ player: MZPlayer.MZMediaPlayer, didCurrentTimeChange currentTime: Swift.Double)
+  public func mediaPlayer(_ player: MZPlayer.MZMediaPlayer, didItemDurationChange itemDuration: Swift.Double?)
+  public func mediaPlayer(_ player: MZPlayer.MZMediaPlayer, unavailableActionReason: MZPlayer.PlayerUnavailableActionReason)
+  public func mediaPlayer(_ player: MZPlayer.MZMediaPlayer, didItemPlayToEndTime endTime: Swift.Double)
+  public func mediaPlayer(_ player: MZPlayer.MZMediaPlayer, didCurrentCaptured frame: UIKit.UIImage)
+}
+public struct MZPlayerConfiguration : MZPlayer.PlayerConfiguration {
+  public let rateObservingTimeout: Swift.Double
+  public let rateObservingTickTime: Swift.Double
+  public let preferredTimescale: CoreMedia.CMTimeScale
+  public let periodicPlayingTime: CoreMedia.CMTime
+  public let audioSessionCategory: AVFoundation.AVAudioSession.Category
+  public let reachabilityURLSessionTimeout: Swift.Double
+  public let reachabilityNetworkTestingURL: Foundation.URL
+  public let reachabilityNetworkTestingTickTime: Swift.Double
+  public let reachabilityNetworkTestingIteration: Swift.UInt
+  public var enableGlobalTimeSync: Swift.Bool
+  public var periodicGlobalSyncTimeCheckTime: CoreMedia.CMTime
+  public var globalTimeSyncDistanceFromTip: Swift.Double
+  public var signalingRoomId: Swift.String?
+  public var signalingRoomCredentials: MZCameraCore.RoomCredentials?
+  public var signalingSocketManager: MZCameraCore.SocketManageable?
+  public let itemLoadedAssetKeys: [Swift.String]
+  public init(socket: MZCameraCore.SocketManageable? = nil)
+}
+public enum MZPlayerLoggerDomain : Swift.CustomStringConvertible {
+  case state
+  case service
+  case error
+  case lifecycleService
+  case lifecycleState
+  case remoteCommand
+  case unavailableCommand
+  public var description: Swift.String {
+    get
+  }
+  public static func == (a: MZPlayer.MZPlayerLoggerDomain, b: MZPlayer.MZPlayerLoggerDomain) -> Swift.Bool
+  public var hashValue: Swift.Int {
+    get
+  }
+  public func hash(into hasher: inout Swift.Hasher)
+}
+public class MZPlayerMedia : MZPlayer.PlayerMedia {
+  final public let url: Foundation.URL
+  final public let type: MZPlayer.MediaType
+  final public let assetOptions: [Swift.String : Any]?
+  final public let preheatAsset: MZPlayer.Asset?
+  public init(url: Foundation.URL, type: MZPlayer.MediaType, metadata: MZPlayer.MZMediaMetadata? = nil, assetOptions: [Swift.String : Any]? = nil, preheatAsset: MZPlayer.Asset? = nil)
+  public func getMetadata() -> MZPlayer.PlayerMediaMetadata?
+  public func setMetadata(_ metadata: MZPlayer.PlayerMediaMetadata)
+  @objc deinit
+}
+public enum PlaybackPosition {
+  case second(Swift.Double)
+  case date(Foundation.Date)
+}
+public protocol PlayerCommand {
+  func load(media: MZPlayer.PlayerMedia, autostart: Swift.Bool, position: MZPlayer.PlaybackPosition?)
+  func pause()
+  func play()
+  func seek(position: MZPlayer.PlaybackPosition)
+  func stop()
+}
+public protocol PlayerConfiguration {
+  var rateObservingTimeout: Foundation.TimeInterval { get }
+  var rateObservingTickTime: Foundation.TimeInterval { get }
+  var preferredTimescale: CoreMedia.CMTimeScale { get }
+  var periodicPlayingTime: CoreMedia.CMTime { get }
+  var audioSessionCategory: AVFoundation.AVAudioSession.Category { get }
+  var reachabilityURLSessionTimeout: Foundation.TimeInterval { get }
+  var reachabilityNetworkTestingURL: Foundation.URL { get }
+  var reachabilityNetworkTestingTickTime: Foundation.TimeInterval { get }
+  var reachabilityNetworkTestingIteration: Swift.UInt { get }
+  var enableGlobalTimeSync: Swift.Bool { get set }
+  var periodicGlobalSyncTimeCheckTime: CoreMedia.CMTime { get }
+  var globalTimeSyncDistanceFromTip: Foundation.TimeInterval { get }
+  var signalingRoomId: Swift.String? { get set }
+  var signalingRoomCredentials: MZCameraCore.RoomCredentials? { get set }
+  var signalingSocketManager: MZCameraCore.SocketManageable? { get }
+  var itemLoadedAssetKeys: [Swift.String] { get }
+}
+public protocol PlayerControllable : AnyObject, MZPlayer.PlayerCommand {
+  var currentMedia: MZPlayer.PlayerMedia? { get }
+  var currentTime: Swift.Double { get }
+  var loopMode: Swift.Bool { get set }
+  var player: AVFoundation.AVPlayer { get }
+  func updateMetadata(_ metadata: MZPlayer.PlayerMediaMetadata)
+}
+public enum MediaType {
+  case clip
+  case stream(isLive: Swift.Bool)
+}
+extension MediaType : Swift.CustomStringConvertible {
+  public var description: Swift.String {
+    get
+  }
+}
+extension MediaType : Swift.Equatable {
+}
+public func == (lhs: MZPlayer.MediaType, rhs: MZPlayer.MediaType) -> Swift.Bool
+public protocol PlayerMedia : Swift.CustomStringConvertible {
+  var url: Foundation.URL { get }
+  var type: MZPlayer.MediaType { get }
+  var preheatAsset: MZPlayer.Asset? { get }
+  var assetOptions: [Swift.String : Any]? { get }
+  func getMetadata() -> MZPlayer.PlayerMediaMetadata?
+  func setMetadata(_ metadata: MZPlayer.PlayerMediaMetadata)
+}
+extension PlayerMedia {
+  public var description: Swift.String {
+    get
+  }
+}
+extension PlayerMedia {
+  public var isLive: Swift.Bool {
+    get
+  }
+}
+public protocol PlayerMediaMetadata : Swift.CustomStringConvertible {
+  var title: Swift.String? { get }
+  var artist: Swift.String? { get }
+  var albumTitle: Swift.String? { get }
+  var image: Foundation.Data? { get }
+  var remoteImageUrl: Foundation.URL? { get }
+}
+extension PlayerMediaMetadata {
+  public var description: Swift.String {
+    get
+  }
+}
+@_hasMissingDesignatedInitializers public class PlayerPoolManager {
+  public static var shared: MZPlayer.PlayerPoolManager
+  public var signalingSocket: MZCameraCore.SocketManageable?
+  public func getPlayer(withName name: Swift.String, isLive: Swift.Bool, loop: Swift.Bool = true) -> MZPlayer.HLSPlayer
+  public func releasePlayer(withName name: Swift.String)
+  public func releasePlayers(withNames names: [Swift.String])
+  public func releaseAllPlayer()
+  @objc deinit
+}
+public enum HLSPlayer {
+  case custom(player: MZPlayer.LHLSPlayer)
+  case native(player: MZPlayer.HLSAssetPlaybackManager)
+  case stateful(player: MZPlayer.MZMediaPlayer)
+  public func play()
+  public func pause()
+  public func stop()
+}
+open class StateMachine<State, Event> where State : Swift.Hashable, Event : Swift.Hashable {
+  public var enableLogging: Swift.Bool
+  public var currentState: State {
+    get
+  }
+  public init(initialState: State, callbackQueue: Dispatch.DispatchQueue? = nil)
+  public func add(transition: MZPlayer.Transition<State, Event>)
+  public func process(event: Event, execution: (() -> Swift.Void)? = nil, callback: MZPlayer.TransitionBlock? = nil)
+  @objc deinit
+}
+public class Stream : Swift.Codable {
+  final public let name: Swift.String
+  public var timeLoaded: Swift.Double?
+  public var timeExpectedToLoad: Swift.Double?
+  public var urlBookmark: Foundation.Data?
+  public var expirationDate: Foundation.Date?
+  public var expirationSuggestion: Swift.Int
+  public var local: Swift.Bool
+  public init(name: Swift.String)
+  public static func parse(data: Foundation.Data) -> MZPlayer.Stream?
+  @objc deinit
+  required public init(from decoder: Swift.Decoder) throws
+  public func encode(to encoder: Swift.Encoder) throws
+}
+extension Stream {
+  public var percentComplete: Swift.Double {
+    get
+  }
+  public var jsonData: Foundation.Data? {
+    get
+  }
+}
+extension Stream : Swift.Equatable {
+  public static func == (lhs: MZPlayer.Stream, rhs: MZPlayer.Stream) -> Swift.Bool
+}
+public enum TransitionResult {
+  case success
+  case failure
+  public static func == (a: MZPlayer.TransitionResult, b: MZPlayer.TransitionResult) -> Swift.Bool
+  public var hashValue: Swift.Int {
+    get
+  }
+  public func hash(into hasher: inout Swift.Hasher)
+}
+public typealias ExecutionBlock = (() -> Swift.Void)
+public typealias TransitionBlock = ((MZPlayer.TransitionResult) -> Swift.Void)
+public struct Transition<State, Event> {
+  public let event: Event
+  public let source: State
+  public let destination: State
+  public init(with event: Event, from: State, to: State, preBlock: MZPlayer.ExecutionBlock? = nil, postBlock: MZPlayer.ExecutionBlock? = nil)
+}
